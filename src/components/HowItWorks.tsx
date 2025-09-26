@@ -1,7 +1,7 @@
 import React from 'react';
 import { Camera, Send, CheckCircle, ArrowRight } from 'lucide-react';
 
-const HowItWorks = () => {
+const HowItWorks: React.FC = () => {
   const steps = [
     {
       icon: Camera,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, MapPin, Mail, Phone, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 
-const CallToActionFooter = () => {
+const CallToActionFooter: React.FC = () => {
   const footerLinks = {
     platform: [
       { label: "How It Works", href: "#how-it-works" },

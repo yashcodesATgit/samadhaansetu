@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, Shield, Camera, BarChart, Clock, MapPin, ArrowRight } from 'lucide-react';
 
-const DualAudience = () => {
+const DualAudience: React.FC = () => {
   const citizenFeatures = [
     { icon: Camera, title: "Easy Reporting", description: "Snap, describe, submit - it's that simple" },
     { icon: Clock, title: "Real-time Updates", description: "Track your reports from submission to resolution" },

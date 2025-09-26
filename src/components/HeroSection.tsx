@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowRight, MapPin, Camera, Zap } from 'lucide-react';
 
-const HeroSection = () => {
+const HeroSection: React.FC = () => {
   return (
     <section className="bg-black text-white relative overflow-hidden">
       {/* Background Pattern */}

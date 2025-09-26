@@ -11,7 +11,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const FeaturesShowcase = () => {
+const FeaturesShowcase: React.FC = () => {
   const features = [
     {
       icon: MapPin,

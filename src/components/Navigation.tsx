@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X, MapPin } from 'lucide-react';
 
-const Navigation = () => {
+const Navigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
