@@ -1,67 +1,124 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css'; // Import MapLibre GL CSS
+import { Map, View, Feature } from 'ol';
+import TileLayer from 'ol/layer/Tile';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import OSM from 'ol/source/OSM';
+import Point from 'ol/geom/Point';
+import Geolocation from 'ol/Geolocation';
+import { Style, Icon, Fill, Stroke, Circle } from 'ol/style';
+import { fromLonLat, toLonLat } from 'ol/proj';
+import 'ol/ol.css'; // Import OpenLayers CSS
 import { LocateFixed } from 'lucide-react'; // Icon for the locate button
 
 const MapComponent: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markerRef = useRef<maplibregl.Marker | null>(null);
+  const mapRef = useRef<Map | null>(null);
+  const geolocationRef = useRef<Geolocation | null>(null);
+  const positionFeatureRef = useRef<Feature | null>(null);
   const [geolocationError, setGeolocationError] = useState<string | null>(null);
 
-  // Function to get user's current location and update the map
+  const createGeolocationFeature = useCallback(() => {
+    const feature = new Feature({
+      geometry: new Point([0, 0]),
+    });
+    feature.setStyle(
+      new Style({
+        image: new Circle({
+          radius: 6,
+          fill: new Fill({
+            color: '#FFD600', // Yellow color for the fill
+          }),
+          stroke: new Stroke({
+            color: '#000000', // Black color for the stroke
+            width: 2,
+          }),
+        }),
+      })
+    );
+    return feature;
+  }, []);
+
   const getUserLocation = useCallback(() => {
     setGeolocationError(null); // Clear any previous errors
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          if (mapRef.current) {
-            // Fly to the user's location
-            mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14 });
-
-            // Add or update marker at user's location
-            if (markerRef.current) {
-              markerRef.current.setLngLat([longitude, latitude]);
-            } else {
-              markerRef.current = new maplibregl.Marker()
-                .setLngLat([longitude, latitude])
-                .addTo(mapRef.current);
-            }
-          }
-        },
-        (error) => {
-          console.error("Error getting geolocation:", error);
-          let errorMessage = "Unable to retrieve your location.";
-          if (error.code === error.PERMISSION_DENIED) {
-            errorMessage = "Location access denied. Please enable location services in your browser settings.";
-          } else if (error.code === error.POSITION_UNAVAILABLE) {
-            errorMessage = "Location information is unavailable.";
-          } else if (error.code === error.TIMEOUT) {
-            errorMessage = "The request to get user location timed out.";
-          }
-          setGeolocationError(errorMessage);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // Options for geolocation
-      );
+    if (geolocationRef.current) {
+      geolocationRef.current.setTracking(true); // Start tracking
     } else {
-      setGeolocationError("Geolocation is not supported by your browser.");
+      setGeolocationError("Geolocation is not supported or initialized.");
     }
   }, []);
 
   useEffect(() => {
-    if (mapRef.current) return; // Initialize map only once
+    if (!mapContainerRef.current) return;
 
-    if (mapContainerRef.current) {
-      mapRef.current = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: 'https://demotiles.maplibre.org/style.json', // Example style
-        center: [-74.0060, 40.7128], // Default to New York City coordinates
+    // Initialize map only once
+    if (!mapRef.current) {
+      const initialView = new View({
+        center: fromLonLat([-74.0060, 40.7128]), // Default to New York City coordinates
         zoom: 10,
       });
 
-      mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+      const map = new Map({
+        target: mapContainerRef.current,
+        layers: [
+          new TileLayer({
+            source: new OSM(),
+          }),
+        ],
+        view: initialView,
+      });
+      mapRef.current = map;
+
+      // Initialize Geolocation
+      const geolocation = new Geolocation({
+        trackingOptions: {
+          enableHighAccuracy: true,
+        },
+        projection: initialView.getProjection(),
+      });
+      geolocationRef.current = geolocation;
+
+      // Handle geolocation changes
+      geolocation.on('change:position', () => {
+        const coordinates = geolocation.getPosition();
+        if (coordinates) {
+          const lonLat = toLonLat(coordinates);
+          map.getView().animate({
+            center: coordinates,
+            zoom: 14,
+            duration: 1000,
+          });
+
+          if (!positionFeatureRef.current) {
+            positionFeatureRef.current = createGeolocationFeature();
+            const vectorSource = new VectorSource({
+              features: [positionFeatureRef.current],
+            });
+            const vectorLayer = new VectorLayer({
+              source: vectorSource,
+            });
+            map.addLayer(vectorLayer);
+          }
+          (positionFeatureRef.current.getGeometry() as Point).setCoordinates(coordinates);
+          setGeolocationError(null); // Clear error if location is found
+        }
+        geolocation.setTracking(false); // Stop tracking after finding location once
+      });
+
+      // Handle geolocation errors
+      geolocation.on('error', (error) => {
+        console.error("Geolocation error:", error);
+        let errorMessage = "Unable to retrieve your location.";
+        if (error.code === 1) { // PERMISSION_DENIED
+          errorMessage = "Location access denied. Please enable location services in your browser settings.";
+        } else if (error.code === 2) { // POSITION_UNAVAILABLE
+          errorMessage = "Location information is unavailable.";
+        } else if (error.code === 3) { // TIMEOUT
+          errorMessage = "The request to get user location timed out.";
+        }
+        setGeolocationError(errorMessage);
+        geolocation.setTracking(false); // Stop tracking on error
+      });
 
       // Attempt to get user location on initial load
       getUserLocation();
@@ -70,11 +127,17 @@ const MapComponent: React.FC = () => {
     // Clean up map on component unmount
     return () => {
       if (mapRef.current) {
-        mapRef.current.remove();
+        mapRef.current.setTarget(undefined);
         mapRef.current = null;
       }
+      if (geolocationRef.current) {
+        geolocationRef.current.setTracking(false);
+        geolocationRef.current.un('change:position', () => {});
+        geolocationRef.current.un('error', () => {});
+        geolocationRef.current = null;
+      }
     };
-  }, [getUserLocation]); // Re-run effect if getUserLocation callback changes
+  }, [createGeolocationFeature, getUserLocation]);
 
   return (
     <div className="relative w-full h-[500px] rounded-lg shadow-lg">

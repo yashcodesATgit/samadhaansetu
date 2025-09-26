@@ -5,6 +5,6 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['lucide-react'],
+    exclude: [], // Removed 'lucide-react' as it's not causing issues and 'maplibre-gl' is no longer used
   },
 });
