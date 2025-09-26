@@ -6,7 +6,6 @@ const CallToActionFooter = () => {
     platform: [
       { label: "How It Works", href: "#how-it-works" },
       { label: "Features", href: "#features" },
-      { label: "Live Map", href: "#map" },
       { label: "Pricing", href: "#pricing" }
     ],
     support: [

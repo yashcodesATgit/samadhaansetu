@@ -33,10 +33,7 @@ const HeroSection = () => {
                 <ArrowRight className="w-5 h-5" />
               </button>
               
-              <button className="text-white border-2 border-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center space-x-2">
-                <MapPin className="w-5 h-5" />
-                <span>Explore Map</span>
-              </button>
+              {/* Removed "Explore Map" button */}
             </div>
 
             {/* Stats */}

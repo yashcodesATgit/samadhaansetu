@@ -21,9 +21,6 @@ const Navigation = () => {
             <a href="#how-it-works" className="text-gray-700 hover:text-black transition-colors font-medium">
               How It Works
             </a>
-            <a href="#map" className="text-gray-700 hover:text-black transition-colors font-medium">
-              Explore Issues
-            </a>
             <a href="#features" className="text-gray-700 hover:text-black transition-colors font-medium">
               Features
             </a>
@@ -51,9 +48,6 @@ const Navigation = () => {
           <div className="md:hidden py-4 space-y-4 border-t">
             <a href="#how-it-works" className="block text-gray-700 hover:text-black transition-colors font-medium">
               How It Works
-            </a>
-            <a href="#map" className="block text-gray-700 hover:text-black transition-colors font-medium">
-              Explore Issues
             </a>
             <a href="#features" className="block text-gray-700 hover:text-black transition-colors font-medium">
               Features
